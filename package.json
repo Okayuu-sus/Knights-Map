@@ -1,0 +1,38 @@
+{
+  "name": "knights-map",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.3",
+    "@next/swc-darwin-arm64": "^16.4.3",
+    "@prisma/client": "^6.19.3",
+    "@tailwindcss/vite": "^4.3.5",
+    "dotenv": "^18.0.10",
+    "maplibre-gl": "^6.17.0",
+    "next": "16.4.3",
+    "next-auth": "^5.0.0-beta.32",
+    "osmtogeojson": "^3.0.0-beta.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/osmtogeojson": "^2.2.34",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
