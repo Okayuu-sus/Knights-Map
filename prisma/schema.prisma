@@ -7,78 +7,149 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum UserRole {
   STUDENT
-  ORGANIZER
+  FACULTY
   ADMIN
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(STUDENT)
+enum LocationType {
+  BUILDING
+  ROOM
+  LANDMARK
+  OUTDOOR_AREA
+  SERVICE
+}
 
-  accounts Account[]
-  sessions Session[]
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// ==============================
+// USER
+// ==============================
+
+model User {
+  id        String   @id @default(cuid())
+  username  String
+  name      String
+  email     String   @unique
+  googleId  String   @unique
+  image     String?
+  role      UserRole @default(STUDENT)
+
+  // Relationships
+  organizations  Organization[]
+  attendedEvents Event[] @relation("EventAttendees")
+  reviewedEvents Event[] @relation("EventReviewer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+// ==============================
+// ORGANIZATION
+// ==============================
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Organization {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  email       String?
+  website     String?
+  logo        String?
+  verified    Boolean @default(false)
 
-  @@unique([provider, providerAccountId])
+  // Relationships
+  members User[]
+  events  Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
+// ==============================
+// BUILDING
+// ==============================
 
 model Building {
   id          String  @id @default(cuid())
-  code        String  @unique
   name        String
+  code        String  @unique
   description String?
+  latitude    Float
+  longitude   Float
+  height      Float?
+  footprint   Json?
+  osmId       String?
+  address     String?
 
-  latitude  Float
-  longitude Float
-
-  footprint Json?
-  osmId     String?
-  address   String?
-  floors    Int?
-  height    Float?
+  // Relationships
+  locations Location[]
+  events    Event[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==============================
+// LOCATION
+// ==============================
+
+model Location {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        LocationType
+  buildingId  String?
+  roomNumber  String?
+  floor       Int?
+  latitude    Float?
+  longitude   Float?
+
+  // Relationships
+  building Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buildingId])
+  @@index([name])
+}
+
+// ==============================
+// EVENT
+// ==============================
+
+model Event {
+  id             String      @id @default(cuid())
+  title          String
+  description    String
+  image          String?
+  locationId     String
+  organizationId String?
+  buildingId     String?
+  reviewedById   String?
+  startAt        DateTime    @db.Timestamptz(3)
+  endAt          DateTime    @db.Timestamptz(3)
+  status         EventStatus @default(PENDING)
+  reviewedAt     DateTime?
+
+  // Relationships
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  building     Building?     @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  reviewedBy   User?         @relation("EventReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  attendees    User[]        @relation("EventAttendees")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([buildingId])
+  @@index([reviewedById])
+  @@index([status])
+  @@index([startAt, endAt])
 }
